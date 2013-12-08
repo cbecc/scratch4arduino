@@ -1,5 +1,7 @@
 //  claudio becchetti  modified for the available firmatajava rxtx 8-12-2013
-// now compile properly
+//
+// 1.1. 5-12-2013   now compile properly with firmata.java
+// 1.2: 8-12-2013  pwm implemented
 
 // A4S.java
 // Copyright (c) MIT Media Laboratory, 2013
@@ -81,7 +83,7 @@ public static class  MyWriter implements Firmata.Writer {
 
 				//arduino = new Firmata(serialPort.getInputStream(), serialPort.getOutputStream());
 				writer = new MyWriter();
-				System.err.println(writer);
+				
 				arduino = new Firmata(writer);
 				reader = new SerialReader();
 				
@@ -176,21 +178,38 @@ public static class  MyWriter implements Firmata.Writer {
 		String[] parts = cmdAndArgs.split("/");
 		String cmd = parts[0];
 		
-		//System.out.print(cmdAndArgs);
+		//if (cmd.equals("poll")==false)
+		//	System.out.print(cmdAndArgs);
 		
 	//	try {
+			
 			if (cmd.equals("pinOutput")) {
 				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.OUTPUT);
 			} else if (cmd.equals("pinInput")) {
 				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.INPUT);
+			} else if (cmd.equals("pinPwm")) {// added pwm
+				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.PWM);
 			} else if (cmd.equals("pinHigh")) {
 				arduino.digitalWrite(Integer.parseInt(parts[1]), Firmata.HIGH);
 			} else if (cmd.equals("pinLow")) {
 				arduino.digitalWrite(Integer.parseInt(parts[1]), Firmata.LOW);
 			} else if (cmd.equals("pinMode")) {
-				arduino.pinMode(Integer.parseInt(parts[1]), "input".equals(parts[2]) ? Firmata.INPUT : Firmata.OUTPUT);
+				if ("input".equals(parts[2])) // added pwm
+					arduino.pinMode(Integer.parseInt(parts[1]),  Firmata.INPUT ); else
+				if ("output".equals(parts[2]))
+					arduino.pinMode(Integer.parseInt(parts[1]), Firmata.OUTPUT); else
+				if ("pwm".equals(parts[2])) // added pwm
+					{
+					arduino.pinMode(Integer.parseInt(parts[1]), Firmata.PWM);	
+					System.out.println("pwm requested \n");					
+					}
+				//arduino.pinMode(Integer.parseInt(parts[1]), "input".equals(parts[2]) ? Firmata.INPUT : Firmata.OUTPUT); //replaced
 			} else if (cmd.equals("digitalWrite")) {
 				arduino.digitalWrite(Integer.parseInt(parts[1]), "high".equals(parts[2]) ? Firmata.HIGH : Firmata.LOW);
+			} else if (cmd.equals("analogWrite")) {// added pwm  
+				arduino.analogWrite(Integer.parseInt(parts[1]), Integer.parseInt(parts[2]) );
+				
+				
 			} else if (cmd.equals("poll")) {
 				// set response to a collection of sensor, value pairs, one pair per line
 				// in this example there is only one sensor, "volume"
