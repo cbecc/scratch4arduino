@@ -1,11 +1,13 @@
 scratch4arduino
 ===============
 
-software and firmware to control Arduino with Scratch integrated by Claudio Becchetti.
+Software and firmware to control Arduino with Scratch integrated by Claudio Becchetti.
+Available Scratch blocks are analogread, analogwrite (pwm), digital read and digital write 
+Such blocks operate on any allowed arduino pin.
 
 v1.2 8-12-2013
 
-It is used for primary school children (9 years) to build and control robot cars 
+This package is used for primary school children (9 years) to build and control robot cars 
 starting from commercial cheap remote controlled cars and arduino boards
 
 Children are building their own cars with arduino boards to perform  a
@@ -54,7 +56,7 @@ for windows change the "runa4scom13 usb direct.bat" with the proper serial port 
 9. You should see the A4S extension and blocks appear in the "More Blocks" category in the Scratch editor. If the A4S server is running, there will be a green dot next to the "A4S" title. 
 10. in the example directory you will find an example of pwm on pin 13
 
-## Instructions to to recompile a4s 
+## Instructions to recompile a4s 
 the a4s is compiled in a jar file but if you like to change
 the source then you need to recompile as follows:
 
