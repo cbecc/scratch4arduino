@@ -2,6 +2,7 @@
 //
 // 1.1. 5-12-2013   now compile properly with firmata.java
 // 1.2: 8-12-2013  pwm implemented
+// 1.3  12-12-2013
 
 // A4S.java
 // Copyright (c) MIT Media Laboratory, 2013
@@ -68,6 +69,7 @@ public static class  MyWriter implements Firmata.Writer {
 	public static MyWriter writer;
 	
 	public static void main(String[] args) throws IOException {
+		System.out.println("Scratch for Arduino V. 1.3  12-12-2013 ");
 		try {
 			if (args.length < 1) {
 				System.err.println("Please specify serial port on command line.");

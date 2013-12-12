@@ -1,4 +1,4 @@
-{	"extensionName": "A4S (Arduino For Scratch)",
+{	"extensionName": "A4S (Scratch for Arduino)",
 	"extensionPort": 12345,
 	"blockSpecs": [
 //		[" ", "set pin %n high", "pinHigh", 13],
@@ -8,7 +8,7 @@
 
 		[" ", "Configure pin %n as %m.inputOutput", "pinMode", 2, "input"],
 		[" ", "Digital write pin %n to %m.highLow", "digitalWrite", 13, "high"],
-		[" ", "Analog write pin %n to %n", "analogWrite", 13, 0],
+		[" ", "Analog write pin %n to %n", "analogWrite", 11, 0],
 		["b", "Digital read pin %n", "digitalRead", 2],
 		["r", "Analog read pin %n", "analogRead", 0],
 	],
