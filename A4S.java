@@ -1,8 +1,22 @@
-//  claudio becchetti  modified for the available firmatajava rxtx 8-12-2013
+//***************** PolpeScratch, Scratch to control Arduino  *************
+//modified by Claudio Becchetti  on original a4s ideas from (see below)
 //
 // 1.1. 5-12-2013   now compile properly with firmata.java
-// 1.2: 8-12-2013  pwm implemented
+// 1.2: 8-12-2013   pwm implemented
 // 1.3  12-12-2013
+// 1.4	23-12-2013	added at function at point 1 below 
+// 					at startup if the com is not available the program continues to try to open the port
+
+// *******************************************
+//          Functions to be implemented
+//
+// 1) at startup if the com is not available the program continues to try to open the port
+// 2) if the port closed the program goes in standby and wait for the port to be open
+// 3) if port is not indicated the program starts scanning available ports for firmata answer
+// 4) gui start up
+
+// ********************************************** 
+
 
 // A4S.java
 // Copyright (c) MIT Media Laboratory, 2013
@@ -69,14 +83,58 @@ public static class  MyWriter implements Firmata.Writer {
 	public static MyWriter writer;
 	
 	public static void main(String[] args) throws IOException {
-		System.out.println("Scratch for Arduino V. 1.3  12-12-2013 ");
+	
+		System.out.println("\n\r\n\r************ PolpeScratch ***************");
+		System.out.println("Scratch to control Arduino V. 1.3.1  23-12-2013 ");
+		
+		CommPortIdentifier portIdentifier;
+		CommPort commPort;
+		int i=0;
+		
+		//1) check arguments
 		try {
 			if (args.length < 1) {
 				System.err.println("Please specify serial port on command line.");
 				return;
 			}
-			CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(args[0]);
-			CommPort commPort = portIdentifier.open("A4S",2000);
+		
+		} catch (Exception e) {
+			System.err.println("port not found in main arguments");
+			System.err.println(e);
+			return;
+		}
+		
+		//2) find identifier 
+		while (true)
+		{
+
+		try {
+			i++;
+			Thread.sleep(1000);
+			portIdentifier = CommPortIdentifier.getPortIdentifier(args[0]);
+			
+			
+			break;
+			} catch (Exception e) {
+			
+			System.err.println("problems on finding port " + args[0]);
+			System.err.println(i+" "+ e);
+			Enumeration portList = CommPortIdentifier.getPortIdentifiers();	 
+			}
+		}
+		
+		//3)  open port
+		try {
+			
+			commPort = portIdentifier.open("A4S",2000);
+			
+			} catch (Exception e) {
+			System.err.println("problems on opening port " + args[0]);
+			System.err.println(e);
+			return;
+		}
+		
+		try {
 
 			if ( commPort instanceof SerialPort )
 			{
@@ -97,13 +155,17 @@ public static class  MyWriter implements Firmata.Writer {
 				System.out.println("Error: Only serial ports are handled by this example.");
 				return;
 			}
+		
 		} catch (Exception e) {
+			System.err.println("problems on opened port " + args[0] );
 			System.err.println(e);
 			return;
 		}
+		System.out.println("\n\r\n\r************ PolpeScratch ***************");
+		System.out.println("\n\rArduino port " + args[0]+ " working\n\r" );
 		
 		InetAddress addr = InetAddress.getLocalHost();
-		System.out.println("HTTPExtensionExample helper app started on " + addr.toString());
+		System.out.println("PolpeScratch http server for Scratch started on " + addr.toString());
 		
 		ServerSocket serverSock = new ServerSocket(PORT);
 		while (true) {
@@ -203,7 +265,7 @@ public static class  MyWriter implements Firmata.Writer {
 				if ("pwm".equals(parts[2])) // added pwm
 					{
 					arduino.pinMode(Integer.parseInt(parts[1]), Firmata.PWM);	
-					System.out.println("pwm requested \n");					
+					//System.out.println("pwm requested \n");					
 					}
 				//arduino.pinMode(Integer.parseInt(parts[1]), "input".equals(parts[2]) ? Firmata.INPUT : Firmata.OUTPUT); //replaced
 			} else if (cmd.equals("digitalWrite")) {
