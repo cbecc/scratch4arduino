@@ -6,6 +6,9 @@
 // 1.3  12-12-2013
 // 1.4	23-12-2013	added at function at point 1 below 
 // 					at startup if the com is not available the program continues to try to open the port
+// 1.5  30-12-2013  fixed bug for digital-analog input not updated now works
+//					remember that you should configure the pin as input in order to get data
+//					added a new scratch example to test analog digital input output
 
 // *******************************************
 //          Functions to be implemented
@@ -49,6 +52,11 @@ import gnu.io.UnsupportedCommOperationException;
 import org.firmata.Firmata;
 
 public class A4S {
+	private static boolean DEBUG_ACTIVE = true;
+	private	static int num_of_poll_reponse =0;
+	
+	private	static int refresh_rate_30msec =60;// after 1800 millisec arduino. init
+	private static int REPORT_DIGITAL         = 0xD0; // enable digital input by port
 
 	private static final int PORT = 12345; // set to your extension's port number
 	private static int volume = 8; // replace with your extension's data, if any
@@ -66,7 +74,7 @@ public class A4S {
 			try {
 				while (serialPort.getInputStream().available() > 0) arduino.processInput(serialPort.getInputStream().read());
 			} catch (IOException  err) {
-				System.err.println(err);
+				System.err.println(err.getStackTrace()[0].getLineNumber() + ":" + err);
 			}
 		}
 	}
@@ -76,7 +84,7 @@ public static class  MyWriter implements Firmata.Writer {
 		try {
 		serialPort.getOutputStream().write(val);
 		} catch (IOException  err) {
-				System.err.println(err);
+				System.err.println(err.getStackTrace()[0].getLineNumber() + ":" + err);
 			}
 		}
 	}	
@@ -85,7 +93,7 @@ public static class  MyWriter implements Firmata.Writer {
 	public static void main(String[] args) throws IOException {
 	
 		System.out.println("\n\r\n\r************ PolpeScratch ***************");
-		System.out.println("Scratch to control Arduino V. 1.3.1  23-12-2013 ");
+		System.out.println("Scratch to control Arduino V. 1.5.1  30-12-2013 ");
 		
 		CommPortIdentifier portIdentifier;
 		CommPort commPort;
@@ -100,7 +108,7 @@ public static class  MyWriter implements Firmata.Writer {
 		
 		} catch (Exception e) {
 			System.err.println("port not found in main arguments");
-			System.err.println(e);
+			System.err.println(e.getStackTrace()[0].getLineNumber() + ":" + e);
 			return;
 		}
 		
@@ -155,6 +163,8 @@ public static class  MyWriter implements Firmata.Writer {
 				System.out.println("Error: Only serial ports are handled by this example.");
 				return;
 			}
+			
+			
 		
 		} catch (Exception e) {
 			System.err.println("problems on opened port " + args[0] );
@@ -168,6 +178,9 @@ public static class  MyWriter implements Firmata.Writer {
 		System.out.println("PolpeScratch http server for Scratch started on " + addr.toString());
 		
 		ServerSocket serverSock = new ServerSocket(PORT);
+		
+		
+		
 		while (true) {
 			Socket sock = serverSock.accept();
 			sockIn = sock.getInputStream();
@@ -180,6 +193,7 @@ public static class  MyWriter implements Firmata.Writer {
 			}
 			sock.close();
 		}
+		
 	}
 
 	private static void handleRequest() throws IOException {
@@ -241,25 +255,46 @@ public static class  MyWriter implements Firmata.Writer {
 		String response = "okay";
 		String[] parts = cmdAndArgs.split("/");
 		String cmd = parts[0];
+
 		
-		//if (cmd.equals("poll")==false)
-		//	System.out.print(cmdAndArgs);
+		if (DEBUG_ACTIVE)
+			if (cmd.equals("poll")==false)
+				System.out.print(cmdAndArgs);
+				
 		
-	//	try {
-			
+		//try {
+			/* old commands to be removed
 			if (cmd.equals("pinOutput")) {
 				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.OUTPUT);
 			} else if (cmd.equals("pinInput")) {
 				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.INPUT);
+								
 			} else if (cmd.equals("pinPwm")) {// added pwm
 				arduino.pinMode(Integer.parseInt(parts[1]), Firmata.PWM);
+			
 			} else if (cmd.equals("pinHigh")) {
 				arduino.digitalWrite(Integer.parseInt(parts[1]), Firmata.HIGH);
 			} else if (cmd.equals("pinLow")) {
 				arduino.digitalWrite(Integer.parseInt(parts[1]), Firmata.LOW);
-			} else if (cmd.equals("pinMode")) {
+			} else 
+			*/
+			if (cmd.equals("pinMode")) {
 				if ("input".equals(parts[2])) // added pwm
-					arduino.pinMode(Integer.parseInt(parts[1]),  Firmata.INPUT ); else
+					{
+					arduino.pinMode(Integer.parseInt(parts[1]),  Firmata.INPUT ); 
+					
+					//set report active without this digital input is not updated
+					if (DEBUG_ACTIVE )
+							System.out.println("sent digital report");
+					/*
+					for (int i = 0; i < 16; i++) {
+							serialPort.getOutputStream().write(REPORT_DIGITAL | i);
+							serialPort.getOutputStream().write(1);
+							}
+					*/	
+					arduino.init();
+					}
+					else
 				if ("output".equals(parts[2]))
 					arduino.pinMode(Integer.parseInt(parts[1]), Firmata.OUTPUT); else
 				if ("pwm".equals(parts[2])) // added pwm
@@ -284,15 +319,42 @@ public static class  MyWriter implements Firmata.Writer {
 				}
 				for (int i = 0; i <= 5; i++) {
 					response += "analogRead/" + i + " " + (arduino.analogRead(i)) + "\n";
+				
 				}
+				refresh_rate_30msec--;
+				if (refresh_rate_30msec==0)
+					{
+					refresh_rate_30msec = 200;
+					
+					
+					if (arduino.refresh_arrived == 0)
+						{
+						if (DEBUG_ACTIVE )
+							System.out.println("no updates:"+ arduino.refresh_arrived + " refresh requested");
+						arduino.init(); // every some time restart
+						
+						}
+						else arduino.refresh_arrived =0;
+					}
+					
+				if (DEBUG_ACTIVE )
+					{
+					num_of_poll_reponse++;
+					if (num_of_poll_reponse == 120)
+						{
+						num_of_poll_reponse=0;
+						System.out.println(" " + response +"refresh analog = "+ arduino.refresh_arrived +" ");
+					
+						}
+					}
 			} else {
 				response = "unknown command: " + cmd;
 			}
-			//System.out.println(" " + response);
+			
+				
 			sendResponse(response);
 		//} catch (IOException e) {
-		//	System.err.println(e);
-		//}
+		//	System.err.println(e);		 }
 	}
 
 	private static void doHelp() {

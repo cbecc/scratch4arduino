@@ -1,6 +1,8 @@
 /**
  * Firmata.java - Firmata library for Java
  * Copyright (C) 2006-13 David A. Mellis
+ * modified by Claudio Becchetti 
+ * 1.5 30-12-2013 fixing bugs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,6 +31,10 @@ package org.firmata; // hope this is okay!
  * Internal class used by the Arduino class to parse the Firmata protocol.
  */
 public class Firmata {
+
+	public static int refresh_arrived =0; 
+	
+	public static boolean DEBUG_ACTIVE = true;
   /**
    * Constant to set a pin to input mode (in a call to pinMode()).
    */
@@ -149,6 +155,8 @@ public class Firmata {
   
   public void init() {
     // enable all ports; firmware should ignore non-existent ones
+	if (DEBUG_ACTIVE)
+		System.out.println("FI: "+"init started");
     for (int i = 0; i < 16; i++) {
       out.write(REPORT_DIGITAL | i);
       out.write(1);
@@ -244,17 +252,20 @@ public class Firmata {
   }
   
   private void setDigitalInputs(int portNumber, int portData) {
-    //System.out.println("digital port " + portNumber + " is " + portData);
+    if (DEBUG_ACTIVE)
+		System.out.println("FI: "+"digital port " + portNumber + " is " + portData);
     digitalInputData[portNumber] = portData;
   }
 
   private void setAnalogInput(int pin, int value) {
-    //System.out.println("analog pin " + pin + " is " + value);
+   // if (DEBUG_ACTIVE)
+	//	System.out.print("FI: "+"A" + pin + " = " + value+", ");
     analogInputData[pin] = value;
   }
 
   private void setVersion(int majorVersion, int minorVersion) {
-    //System.out.println("version is " + majorVersion + "." + minorVersion);
+    if (DEBUG_ACTIVE)
+		System.out.println("FI: "+"version is " + majorVersion + "." + minorVersion);
     this.majorVersion = majorVersion;
     this.minorVersion = minorVersion;
   }
@@ -272,9 +283,13 @@ public class Firmata {
   }
 
   private void processSysexMessage() {
-//    System.out.print("[ ");
-//    for (int i = 0; i < storedInputData.length; i++) System.out.print(storedInputData[i] + " ");
-//    System.out.println("]");
+  if (DEBUG_ACTIVE )
+	{
+    System.out.print("[ ");
+	if (storedInputData.length >3)
+		for (int i = 0; i < 3 ; i++) System.out.print(storedInputData[i] + " ");
+    System.out.println("]");
+	}
     switch(storedInputData[0]) { //first byte in buffer is command
 //      case CAPABILITY_RESPONSE:
 //        for (int pin = 0; pin < pinModes.length; pin++) {
@@ -301,10 +316,22 @@ public class Firmata {
 //        }
 //        break;
       case ANALOG_MAPPING_RESPONSE:
+		refresh_arrived++;
+		 if (DEBUG_ACTIVE )   
+			System.out.print("U");
         for (int pin = 0; pin < analogChannel.length; pin++)
           analogChannel[pin] = 127;
+		// if (DEBUG_ACTIVE )   
+		//		System.out.print("FI: ");
         for (int i = 1; i < sysexBytesRead; i++)
-          analogChannel[i - 1] = storedInputData[i];
+			{
+			analogChannel[i - 1] = storedInputData[i];
+		//  	if (DEBUG_ACTIVE )   
+		//		System.out.print("A" + (i-1)   + "= " + analogChannel[i - 1] + " ");
+			}
+		//if (DEBUG_ACTIVE )   
+		//		System.out.print("\n");
+				
         for (int pin = 0; pin < analogChannel.length; pin++) {
           if (analogChannel[pin] != 127) {
             out.write(REPORT_ANALOG | analogChannel[pin]);
@@ -318,7 +345,6 @@ public class Firmata {
   public void processInput(int inputData) {
     int command;
     
-//    System.out.print(">" + inputData + " ");
     
     if (parsingSysex) {
       if (inputData == END_SYSEX) {
@@ -337,9 +363,13 @@ public class Firmata {
         switch(executeMultiByteCommand) {
         case DIGITAL_MESSAGE:
           setDigitalInputs(multiByteChannel, (storedInputData[0] << 7) + storedInputData[1]);
+		  
           break;
         case ANALOG_MESSAGE:
           setAnalogInput(multiByteChannel, (storedInputData[0] << 7) + storedInputData[1]);
+		  refresh_arrived++;
+			//if (DEBUG_ACTIVE )   
+			//	System.out.print(".");
           break;
         case REPORT_VERSION:
           setVersion(storedInputData[1], storedInputData[0]);
@@ -356,12 +386,20 @@ public class Firmata {
       }
       switch (command) {
       case DIGITAL_MESSAGE:
+	  	if (DEBUG_ACTIVE && command ==DIGITAL_MESSAGE)   
+			System.out.print("FI: digital message arrived \n ");
       case ANALOG_MESSAGE:
+	  	  //if (DEBUG_ACTIVE && command ==ANALOG_MESSAGE)   
+			//System.out.print("FI: ANALOG_MESSAGE arrived: ");
       case REPORT_VERSION:
+	   if (DEBUG_ACTIVE && command ==REPORT_VERSION)   
+			System.out.print("FI: REPORT_VERSION arrived \n ");
         waitForData = 2;
         executeMultiByteCommand = command;
         break;      
       case START_SYSEX:
+	   if (DEBUG_ACTIVE && command ==START_SYSEX)   
+			System.out.print("FI: START_SYSEX arrived \n ");
         parsingSysex = true;
         sysexBytesRead = 0;
         break;
