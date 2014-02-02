@@ -115,12 +115,13 @@ public static class  MyWriter implements Firmata.Writer {
 		//2) find identifier 
 		while (true)
 		{
-
+		if (DEBUG_ACTIVE)
+			System.out.println("start opening:" +args[0]);
 		try {
 			i++;
 			Thread.sleep(1000);
 			portIdentifier = CommPortIdentifier.getPortIdentifier(args[0]);
-			
+		
 			
 			break;
 			} catch (Exception e) {
@@ -130,18 +131,27 @@ public static class  MyWriter implements Firmata.Writer {
 			Enumeration portList = CommPortIdentifier.getPortIdentifiers();	 
 			}
 		}
+		if (DEBUG_ACTIVE)
+			System.out.println("identifier obtained for:" +args[0]);
+			
 		
+        if ( portIdentifier.isCurrentlyOwned() )
+        {
+            System.out.println("Error: Port is currently in use");
+        }
+			
 		//3)  open port
 		try {
 			
-			commPort = portIdentifier.open("A4S",2000);
+			commPort = portIdentifier.open("A4S",1000);
 			
 			} catch (Exception e) {
 			System.err.println("problems on opening port " + args[0]);
 			System.err.println(e);
 			return;
 		}
-		
+		if (DEBUG_ACTIVE)
+			System.out.println("port opened:" +args[0]);
 		try {
 
 			if ( commPort instanceof SerialPort )
