@@ -2,19 +2,20 @@ PolpeScratch, Scratch to control Arduino
 ===============
 
 Software and firmware to control Arduino with Scratch modified and integrated by Claudio Becchetti.
-Available Scratch blocks are analogread, analogwrite (pwm), digital read and digital write 
+Available Scratch blocks are analogread, analogwrite (pwm), digital read and digital write. 
 Such blocks operate on any allowed arduino pin.
 
-v1.4 23-12-2013
+v1.5 2-2-2014
 
-This package has been used for primary school children (9 years) to build and control robot cars 
-starting from commercial cheap remote controlled cars and arduino boards
-
-Children are building their own cars with arduino boards to perform  a
-football match among robots.
-
+This package is used for primary school (9 years) and high school (15 years)  to build and control robot cars 
+starting from commercial cheap remote controlled cars and arduino boards. Children assemble their own cars 
+to perform football matches among robots.
 Scratch controls
 1) horn, lights, motors(brake, acceleration, direction), ultrasound to avoid walls 
+
+This package has been tested on Windows (XP, Vista 7) and MAC OS
+and it can be used for any easy programming and control of arduino boards through Scratch
+
 
 The directory includes
 
@@ -89,3 +90,5 @@ the source then you need to recompile as follows:
   so that to have javac and jar executables
 2)change the file "Compile_jar.bat" so that the java directory is correct
 3) change a4s as needed and run "Compile_jar.bat"
+
+
